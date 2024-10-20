@@ -1,12 +1,13 @@
 <template>
   <div class="todo-item">
     <div class="todo-left">
-      <input type="checkbox" v-model="todo.completed" @change="toggleCompletion" />
-      <span :class="{ completed: todo.completed }">{{ todo.text }}</span>
+      <!-- <input type="checkbox" v-model="todo.completed" @change="toggleCompletion" /> -->
+      <span class="mx-3">{{ todo.status }}</span>
+      <span :class="{ completed: todo.completed }">{{ todo.title || todo.text }}</span>
     </div>
     <div class="todo-actions">
-      <button @click="$emit('editTodo', todo.id)" class="edit-btn">Edit</button>
-      <button @click="$emit('deleteTodo', todo.id)" class="delete-btn">Delete</button>
+      <button @click="$emit('editTodo', todo.id)" class="btn btn-primary">Edit</button>
+      <button @click="$emit('deleteTodo', todo.id)" class="btn btn-danger">Delete</button>
     </div>
   </div>
 </template>

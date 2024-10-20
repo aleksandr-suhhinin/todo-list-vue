@@ -15,10 +15,11 @@ export const useTodoStore = defineStore('todoStore', {
       await db.addTodo(todo);
     },
     async updateTodo(updatedTodo: Todo) {
+      console.log('updateTodo', updatedTodo);
       const index = this.todos.findIndex(todo => todo.id === updatedTodo.id);
       if (index !== -1) {
         this.todos[index] = updatedTodo;
-        await db.updateTodo(updatedTodo);
+        await db.updateTodo({ ...updatedTodo });
       }
     },
     async deleteTodo(id: number) {

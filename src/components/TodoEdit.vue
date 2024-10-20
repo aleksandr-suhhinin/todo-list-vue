@@ -1,25 +1,35 @@
 <template>
-  <div class="todo-edit-container">
-    <h1>Edit Todo</h1>
-    <div v-if="todo">
-      <label>Title:</label>
-      <input v-model="todo.title" type="text" />
+  <div class="todo-edit-container container">
+    <h1 class="mb-4">Edit Todo</h1>
+    <div v-if="todo" class="mb-3">
+      <div class="mb-3">
+        <label class="form-label">Title:</label>
+        <input v-model="todo.title" type="text" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Text:</label>
+        <textarea v-model="todo.text" rows="5" class="form-control"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Status:</label>
+        <select v-model="todo.status" class="form-select" @change="handleStatusChange">
+          <option value="hold">Hold</option>
+          <option value="inProgress">In Progress</option>
+          <option value="testing">Testing</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Created Date:</label>
+        <input type="date" v-model="formattedCreateDate" class="form-control" disabled />
+      </div>
 
-      <label>Status:</label>
-      <select v-model="todo.status">
-        <option value="hold">Hold</option>
-        <option value="inProgress">In Progress</option>
-        <option value="testing">Testing</option>
-        <option value="completed">Completed</option>
-      </select>
+      <div class="mb-3">
+        <label class="form-label">Completion Date:</label>
+        <input type="date" v-model="formattedCompletionDate" class="form-control" />
+      </div>
 
-      <label>Created Date:</label>
-      <input type="date" v-model="formattedCreateDate" disabled />
-
-      <label>Completion Date:</label>
-      <input type="date" v-model="formattedCompletionDate" />
-
-      <button @click="saveTodo">Save</button>
+      <button @click="saveTodo" class="btn btn-primary">Save</button>
     </div>
   </div>
 </template>
@@ -54,8 +64,15 @@ export default defineComponent({
       }
     });
 
-    const formattedCreateDate = computed(() => {
-      return todo.value?.createDate ? new Date(todo.value.createDate).toISOString().substr(0, 10) : '';
+    const formattedCreateDate = computed({
+      get() {
+        return todo.value?.createDate ? new Date(todo.value.createDate).toISOString().substr(0, 10) : '';
+      },
+      set(value: string) {
+        if (todo.value) {
+          todo.value.createDate = new Date(value);
+        }
+      }
     });
 
     const formattedCompletionDate = computed({
@@ -68,6 +85,14 @@ export default defineComponent({
         }
       }
     });
+
+    const handleStatusChange = () => {
+      if (todo.value?.status === 'completed') {
+        todo.value.completed = true;
+      } else {
+        todo.value.completed = false;
+      }
+    };
 
     const saveTodo = () => {
       if (todo.value) {
@@ -89,30 +114,11 @@ export default defineComponent({
 <style scoped>
 .todo-edit-container {
   max-width: 600px;
+  min-width: 600px;
   margin: 50px auto;
   padding: 20px;
   background-color: white;
   border-radius: 10px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-}
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-input, select {
-  width: 100%;
-  margin-bottom: 20px;
-  padding: 10px;
-  font-size: 16px;
-  border: 2px solid #3498db;
-  border-radius: 5px;
-}
-button {
-  background-color: #3498db;
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
-  cursor: pointer;
 }
 </style>
