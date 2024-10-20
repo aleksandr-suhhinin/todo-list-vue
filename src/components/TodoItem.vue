@@ -1,7 +1,11 @@
 <template>
   <div class="todo-item">
     <div class="todo-left">
-      <input type="checkbox" v-model="todo.completed" @change="toggleCompletion" />
+      <input
+        type="checkbox"
+        :checked="todo.completed"
+        @change="toggleCompletion"
+      />
       <span :class="{ completed: todo.completed }">{{ todo.text }}</span>
     </div>
     <button @click="$emit('deleteTodo', todo.id)" class="delete-btn">Delete</button>
