@@ -23,9 +23,10 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, onMounted } from 'vue';
 import TodoItem from './TodoItem.vue';
 import { Todo } from '../types/todo';
+import { db } from '../utils/db';
 
 export default defineComponent({
   name: 'TodoList',
@@ -35,27 +36,39 @@ export default defineComponent({
     const todos = ref<Todo[]>([]);
     const filter = ref<'all' | 'active' | 'completed'>('all');
 
-    const addTodo = () => {
+    onMounted(async () => {
+      todos.value = await db.getAllTodos();
+    });
+
+    const addTodo = async () => {
       if (newTodo.value.trim()) {
-        todos.value.push({
+        const newTodoItem: Todo = {
           id: Date.now(),
           text: newTodo.value,
           completed: false,
-        });
+        };
+        todos.value.push(newTodoItem);
         newTodo.value = '';
+        const cleanTodo = JSON.parse(JSON.stringify(newTodoItem));
+        await db.addTodo(cleanTodo);
       }
     };
 
-    const deleteTodo = (id: number) => {
+    const deleteTodo = async (id: number) => {
       todos.value = todos.value.filter((todo) => todo.id !== id);
+      await db.deleteTodo(id);
     };
 
-    const toggleTodoCompletion = (id: number) => {
-      const todo = todos.value.find((todo) => todo.id === id);
-      if (todo) {
-        todo.completed = !todo.completed;
-      }
-    };
+  const toggleTodoCompletion = async (id: number) => {
+
+    const todo = todos.value.find((todo) => todo.id === id);
+    if (todo) {
+      todo.completed = !todo.completed;
+      await db.updateTodo({...todo});
+    }
+
+  };
+
 
     const filteredTodos = computed(() => {
       if (filter.value === 'all') {
