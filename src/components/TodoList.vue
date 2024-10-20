@@ -1,34 +1,65 @@
 <template>
   <div class="todo-list-container container">
-    <h1 class="mb-4">Todo List</h1>
-    <div class="mb-3 mx-3">
-      <div class="input-container">
-        <input v-model="newTodo" @keyup.enter="addTodo" placeholder="Add a new todo" />
-        <button @click="addTodo" class="btn btn-primary">Add</button>
+    <div class="kanban-board">
+      <!-- Hold Column -->
+      <div class="kanban-column">
+        <h3 class="text-center">Hold</h3>
+        <div class="todo-column">
+          <TodoItem
+            v-for="todo in todosByStatus('hold')"
+            :key="todo.id"
+            :todo="todo"
+            @deleteTodo="deleteTodo"
+            @toggleTodo="toggleTodoCompletion"
+          />
+        </div>
       </div>
-    </div>
-    <div class="mb-3">
-      <div v-if="filteredTodos.length > 0" class="todos-container">
-        <TodoItem
-          v-for="todo in filteredTodos"
-          :key="todo.id"
-          :todo="todo"
-          @editTodo="editTodo"
-          @deleteTodo="deleteTodo"
-          @toggleTodo="toggleTodoCompletion"
-        />
+
+      <!-- In Progress Column -->
+      <div class="kanban-column">
+        <h3 class="text-center">In Progress</h3>
+        <div class="todo-column">
+          <TodoItem
+            v-for="todo in todosByStatus('inProgress')"
+            :key="todo.id"
+            :todo="todo"
+            @deleteTodo="deleteTodo"
+            @toggleTodo="toggleTodoCompletion"
+          />
+        </div>
       </div>
-      <div v-else class="no-todos">No todos found.</div>
-    </div>
-    <div class="mb-3">
-      <div class="filters">
-        <button @click="filterTodos('all')" :class="{ 'btn btn-primary' : filter === 'all',  'btn btn-secondary' : filter !== 'all'}">All</button>
-        <button @click="filterTodos('active')" :class="{ 'btn btn-primary' : filter === 'active',  'btn btn-secondary' : filter !== 'active' }">Active</button>
-        <button @click="filterTodos('completed')" :class="{ 'btn btn-primary' : filter === 'completed',  'btn btn-secondary' : filter !== 'completed' }">Completed</button>
+
+      <!-- Testing Column -->
+      <div class="kanban-column">
+        <h3 class="text-center">Testing</h3>
+        <div class="todo-column">
+          <TodoItem
+            v-for="todo in todosByStatus('testing')"
+            :key="todo.id"
+            :todo="todo"
+            @deleteTodo="deleteTodo"
+            @toggleTodo="toggleTodoCompletion"
+          />
+        </div>
+      </div>
+
+      <!-- Completed Column -->
+      <div class="kanban-column">
+        <h3 class="text-center">Completed</h3>
+        <div class="todo-column">
+          <TodoItem
+            v-for="todo in todosByStatus('completed')"
+            :key="todo.id"
+            :todo="todo"
+            @deleteTodo="deleteTodo"
+            @toggleTodo="toggleTodoCompletion"
+          />
+        </div>
       </div>
     </div>
   </div>
 </template>
+
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -54,6 +85,9 @@ export default defineComponent({
       todos.value = todoStore.todos;
     });
 
+    const todosByStatus = (status: TodoStatus) => {
+      return todos.value.filter((todo) => todo.status === status);
+    };
 
     const editTodo = (id: number) => {
       router.push(`/edit/${id}`);
@@ -115,49 +149,40 @@ export default defineComponent({
       filteredTodos,
       filterTodos,
       filter,
+      todosByStatus
     };
   },
 });
 </script>
+
 <style scoped>
 .todo-list-container {
-  max-width: 600px;
-  min-width: 600px;
-  margin: 50px auto;
   padding: 20px;
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.input-container {
+.kanban-board {
   display: flex;
   justify-content: space-between;
+  gap: 20px; /* Расстояние между колонками */
+}
+
+.kanban-column {
+  width: 300px; /* Фиксированная ширина колонок */
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.todo-column {
+  min-height: 400px;
+}
+
+h3 {
   margin-bottom: 20px;
 }
 
-input {
-  width: 75%;
-  padding: 10px;
-  border: 2px solid #3498db;
-  border-radius: 5px;
-  font-size: 16px;
+.todo-item {
+  margin-bottom: 10px;
 }
-
-.todos-container {
-  margin-top: 20px;
-  padding: 0 10px;
-}
-
-.no-todos {
-  text-align: center;
-  color: #7f8c8d;
-}
-
-.filters {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
 </style>

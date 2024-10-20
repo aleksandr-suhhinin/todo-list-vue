@@ -1,13 +1,13 @@
 <template>
-  <div class="todo-item">
-    <div class="todo-left">
-      <!-- <input type="checkbox" v-model="todo.completed" @change="toggleCompletion" /> -->
-      <span class="mx-3">{{ todo.status }}</span>
-      <span :class="{ completed: todo.completed }">{{ todo.title || todo.text }}</span>
-    </div>
-    <div class="todo-actions">
-      <button @click="$emit('editTodo', todo.id)" class="btn btn-primary">Edit</button>
-      <button @click="$emit('deleteTodo', todo.id)" class="btn btn-danger">Delete</button>
+  <div class="todo-item card">
+    <div class="card-body">
+      <h5 class="card-title">{{ todo.title }}</h5>
+      <p class="card-text">{{ todo.text }}</p>
+      <p class="card-subtitle mb-2 text-muted">Status: {{ todo.status }}</p>
+      <div class="d-flex justify-content-between">
+        <button @click="$emit('editTodo', todo.id)" class="btn btn-primary btn-sm">Edit</button>
+        <button @click="$emit('deleteTodo', todo.id)" class="btn btn-danger btn-sm">Delete</button>
+      </div>
     </div>
   </div>
 </template>
@@ -32,58 +32,37 @@ export default defineComponent({
 });
 </script>
 
+
 <style scoped>
 .todo-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #ecf0f1;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.todo-left {
-  display: flex;
-  align-items: center;
+.card {
+  background-color: #ffffff;
 }
 
-input[type="checkbox"] {
-  margin-right: 10px;
+.card-body {
+  padding: 10px;
 }
 
-span {
+.card-title {
   font-size: 16px;
+  font-weight: bold;
 }
 
-.completed {
-  text-decoration: line-through;
-  color: #7f8c8d;
-}
-
-.edit-btn {
-  background-color: #3498db;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
+.card-text {
   font-size: 14px;
-  margin-right: 5px;
-  cursor: pointer;
-  border: none;
-  transition: background-color 0.3s ease;
+  color: #333333;
 }
 
-.edit-btn:hover {
-  background-color: #2980b9;
+.d-flex {
+  display: flex;
 }
 
-.delete-btn {
-  background-color: #e74c3c;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 14px;
-}
-
-.delete-btn:hover {
-  background-color: #c0392b;
+.justify-content-between {
+  justify-content: space-between;
 }
 </style>
