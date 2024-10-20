@@ -10,6 +10,7 @@
         v-for="todo in filteredTodos"
         :key="todo.id"
         :todo="todo"
+        @editTodo="editTodo"
         @deleteTodo="deleteTodo"
         @toggleTodo="toggleTodoCompletion"
       />
@@ -24,21 +25,33 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import TodoItem from './TodoItem.vue';
-import { Todo } from '../types/todo';
+import { useTodoStore } from '../stores/todoStore';
+import { TodoStatus, type Todo } from '../types/todo';
 import { db } from '../utils/db';
 
 export default defineComponent({
   name: 'TodoList',
   components: { TodoItem },
   setup() {
+    const todoStore = useTodoStore();
+    const router = useRouter();
     const newTodo = ref('');
     const todos = ref<Todo[]>([]);
     const filter = ref<'all' | 'active' | 'completed'>('all');
 
     onMounted(async () => {
-      todos.value = await db.getAllTodos();
+      if (todoStore.todos.length === 0) {
+        await todoStore.loadTodos();
+      }
+      todos.value = todoStore.todos;
     });
+
+
+    const editTodo = (id: number) => {
+      router.push(`/edit/${id}`);
+    };
 
     const addTodo = async () => {
       if (newTodo.value.trim()) {
@@ -46,6 +59,9 @@ export default defineComponent({
           id: Date.now(),
           text: newTodo.value,
           completed: false,
+          title: '',
+          createDate: new Date(),
+          status: TodoStatus.Hold,
         };
         todos.value.push(newTodoItem);
         newTodo.value = '';
@@ -87,10 +103,12 @@ export default defineComponent({
       newTodo,
       todos,
       addTodo,
+      editTodo,
       deleteTodo,
       toggleTodoCompletion,
       filteredTodos,
       filterTodos,
+      filter,
     };
   },
 });
