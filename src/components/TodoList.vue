@@ -9,6 +9,7 @@
             v-for="todo in todosByStatus('hold')"
             :key="todo.id"
             :todo="todo"
+            @editTodo="editTodo"
             @deleteTodo="deleteTodo"
             @toggleTodo="toggleTodoCompletion"
           />
@@ -23,6 +24,7 @@
             v-for="todo in todosByStatus('inProgress')"
             :key="todo.id"
             :todo="todo"
+            @editTodo="editTodo"
             @deleteTodo="deleteTodo"
             @toggleTodo="toggleTodoCompletion"
           />
@@ -37,6 +39,7 @@
             v-for="todo in todosByStatus('testing')"
             :key="todo.id"
             :todo="todo"
+            @editTodo="editTodo"
             @deleteTodo="deleteTodo"
             @toggleTodo="toggleTodoCompletion"
           />
@@ -51,6 +54,7 @@
             v-for="todo in todosByStatus('completed')"
             :key="todo.id"
             :todo="todo"
+            @editTodo="editTodo"
             @deleteTodo="deleteTodo"
             @toggleTodo="toggleTodoCompletion"
           />
