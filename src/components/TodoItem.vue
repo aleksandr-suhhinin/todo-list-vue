@@ -1,20 +1,20 @@
 <template>
   <div class="todo-item">
     <div class="todo-left">
-      <input
-        type="checkbox"
-        :checked="todo.completed"
-        @change="toggleCompletion"
-      />
-      <span :class="{ completed: todo.completed }">{{ todo.text }}</span>
+      <!-- <input type="checkbox" v-model="todo.completed" @change="toggleCompletion" /> -->
+      <span class="mx-3">{{ todo.status }}</span>
+      <span :class="{ completed: todo.completed }">{{ todo.title || todo.text }}</span>
     </div>
-    <button @click="$emit('deleteTodo', todo.id)" class="delete-btn">Delete</button>
+    <div class="todo-actions">
+      <button @click="$emit('editTodo', todo.id)" class="btn btn-primary">Edit</button>
+      <button @click="$emit('deleteTodo', todo.id)" class="btn btn-danger">Delete</button>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
-import { Todo } from '../types/todo';
+import { defineComponent, type PropType } from 'vue';
+import type { Todo } from '../types/todo';
 
 export default defineComponent({
   name: 'TodoItem',
@@ -57,6 +57,22 @@ span {
 .completed {
   text-decoration: line-through;
   color: #7f8c8d;
+}
+
+.edit-btn {
+  background-color: #3498db;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  margin-right: 5px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.edit-btn:hover {
+  background-color: #2980b9;
 }
 
 .delete-btn {

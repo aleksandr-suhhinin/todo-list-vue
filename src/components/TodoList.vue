@@ -1,51 +1,73 @@
 <template>
-  <div class="todo-list-container">
-    <h1>Todo List</h1>
-    <div class="input-container">
-      <input v-model="newTodo" @keyup.enter="addTodo" placeholder="Add a new todo" />
-      <button @click="addTodo" class="add-btn">Add</button>
+  <div class="todo-list-container container">
+    <h1 class="mb-4">Todo List</h1>
+    <div class="mb-3 mx-3">
+      <div class="input-container">
+        <input v-model="newTodo" @keyup.enter="addTodo" placeholder="Add a new todo" />
+        <button @click="addTodo" class="btn btn-primary">Add</button>
+      </div>
     </div>
-    <div v-if="filteredTodos.length > 0" class="todos-container">
-      <TodoItem
-        v-for="todo in filteredTodos"
-        :key="todo.id"
-        :todo="todo"
-        @deleteTodo="deleteTodo"
-        @toggleTodo="toggleTodoCompletion"
-      />
+    <div class="mb-3">
+      <div v-if="filteredTodos.length > 0" class="todos-container">
+        <TodoItem
+          v-for="todo in filteredTodos"
+          :key="todo.id"
+          :todo="todo"
+          @editTodo="editTodo"
+          @deleteTodo="deleteTodo"
+          @toggleTodo="toggleTodoCompletion"
+        />
+      </div>
+      <div v-else class="no-todos">No todos found.</div>
     </div>
-    <div v-else class="no-todos">No todos found.</div>
-    <div class="filters">
-      <button @click="filterTodos('all')" :class="{ active: filter === 'all' }">All</button>
-      <button @click="filterTodos('active')" :class="{ active: filter === 'active' }">Active</button>
-      <button @click="filterTodos('completed')" :class="{ active: filter === 'completed' }">Completed</button>
+    <div class="mb-3">
+      <div class="filters">
+        <button @click="filterTodos('all')" :class="{ 'btn btn-primary' : filter === 'all',  'btn btn-secondary' : filter !== 'all'}">All</button>
+        <button @click="filterTodos('active')" :class="{ 'btn btn-primary' : filter === 'active',  'btn btn-secondary' : filter !== 'active' }">Active</button>
+        <button @click="filterTodos('completed')" :class="{ 'btn btn-primary' : filter === 'completed',  'btn btn-secondary' : filter !== 'completed' }">Completed</button>
+      </div>
     </div>
   </div>
 </template>
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import TodoItem from './TodoItem.vue';
-import { Todo } from '../types/todo';
+import { useTodoStore } from '../stores/todoStore';
+import { TodoStatus, type Todo } from '../types/todo';
 import { db } from '../utils/db';
 
 export default defineComponent({
   name: 'TodoList',
   components: { TodoItem },
   setup() {
+    const todoStore = useTodoStore();
+    const router = useRouter();
     const newTodo = ref('');
     const todos = ref<Todo[]>([]);
     const filter = ref<'all' | 'active' | 'completed'>('all');
 
     onMounted(async () => {
-      todos.value = await db.getAllTodos();
+      if (todoStore.todos.length === 0) {
+        await todoStore.loadTodos();
+      }
+      todos.value = todoStore.todos;
     });
+
+
+    const editTodo = (id: number) => {
+      router.push(`/edit/${id}`);
+    };
 
     const addTodo = async () => {
       if (newTodo.value.trim()) {
         const newTodoItem: Todo = {
           id: Date.now(),
-          text: newTodo.value,
+          title: newTodo.value,
           completed: false,
+          text: '',
+          createDate: new Date(),
+          status: TodoStatus.Hold,
         };
         todos.value.push(newTodoItem);
         newTodo.value = '';
@@ -87,10 +109,12 @@ export default defineComponent({
       newTodo,
       todos,
       addTodo,
+      editTodo,
       deleteTodo,
       toggleTodoCompletion,
       filteredTodos,
       filterTodos,
+      filter,
     };
   },
 });
@@ -98,6 +122,7 @@ export default defineComponent({
 <style scoped>
 .todo-list-container {
   max-width: 600px;
+  min-width: 600px;
   margin: 50px auto;
   padding: 20px;
   background-color: white;
@@ -119,12 +144,6 @@ input {
   font-size: 16px;
 }
 
-.add-btn {
-  background-color: #3498db;
-  color: white;
-  margin-left: 10px;
-}
-
 .todos-container {
   margin-top: 20px;
   padding: 0 10px;
@@ -141,14 +160,4 @@ input {
   margin-top: 20px;
 }
 
-.filters button {
-  background-color: #ecf0f1;
-  color: #2c3e50;
-  margin: 0 5px;
-}
-
-.filters button.active {
-  background-color: #3498db;
-  color: white;
-}
 </style>
