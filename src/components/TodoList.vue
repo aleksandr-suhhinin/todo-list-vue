@@ -1,16 +1,27 @@
 <template>
-  <div class="todo-list-container container">
+  <div class="todo-list-container container" v-if="!isLoading">
+    <div class="header mb-4">
+      <button
+        @click="createNewTodo"
+        class="btn btn-success create-todo-btn"
+      >
+        <Plus class="w-5 h-5" />
+        <span>New Task</span>
+      </button>
+    </div>
     <div class="kanban-board">
       <!-- Hold Column -->
-      <div class="kanban-column" id="hold">
+      <div class="kanban-column">
         <h3 class="text-center">Hold</h3>
-        <div class="todo-column">
-          <draggable :list="todosByStatus('hold')" group="tasks" @start="onDragStart" @end="onDrop">
+        <div class="todo-column" id="hold">
+          <draggable
+            v-model="holdTodos"
+            :group="{ name: 'tasks' }"
+            item-key="id"
+            class="dragArea">
             <template #item="{ element }">
               <div class="todo-item-wrapper" :id="element.id">
                 <TodoItem
-                  v-for="todo in todosByStatus('hold')"
-                  :key="todo.id"
                   :todo="element"
                   @editTodo="editTodo"
                   @deleteTodo="deleteTodo"
@@ -23,15 +34,17 @@
       </div>
 
       <!-- In Progress Column -->
-      <div class="kanban-column" id="inProgress">
+      <div class="kanban-column">
         <h3 class="text-center">In Progress</h3>
-        <div class="todo-column">
-          <draggable :list="todosByStatus('inProgress')" group="tasks" @start="onDragStart" @end="onDrop">
+        <div class="todo-column" id="inProgress">
+          <draggable
+            v-model="inProgressTodos"
+            :group="{ name: 'tasks' }"
+            item-key="id"
+            class="dragArea">
             <template #item="{ element }">
               <div class="todo-item-wrapper" :id="element.id">
                 <TodoItem
-                  v-for="todo in todosByStatus('inProgress')"
-                  :key="todo.id"
                   :todo="element"
                   @editTodo="editTodo"
                   @deleteTodo="deleteTodo"
@@ -44,15 +57,17 @@
       </div>
 
       <!-- Testing Column -->
-      <div class="kanban-column" id="testing">
+      <div class="kanban-column">
         <h3 class="text-center">Testing</h3>
-        <div class="todo-column">
-          <draggable :list="todosByStatus('testing')" group="tasks" @start="onDragStart" @end="onDrop">
+        <div class="todo-column" id="testing">
+          <draggable
+            v-model="testingTodos"
+            :group="{ name: 'tasks' }"
+            item-key="id"
+            class="dragArea">
             <template #item="{ element }">
               <div class="todo-item-wrapper" :id="element.id">
                 <TodoItem
-                  v-for="todo in todosByStatus('testing')"
-                  :key="todo.id"
                   :todo="element"
                   @editTodo="editTodo"
                   @deleteTodo="deleteTodo"
@@ -65,16 +80,18 @@
       </div>
 
       <!-- Completed Column -->
-      <div class="kanban-column" id="completed">
+      <div class="kanban-column">
         <h3 class="text-center">Completed</h3>
-        <div class="todo-column">
-          <draggable :list="todosByStatus('completed')" group="tasks" @start="onDragStart" @end="onDrop">
+        <div class="todo-column" id="completed">
+          <draggable
+            v-model="completedTodos"
+            :group="{ name: 'tasks' }"
+            item-key="id"
+            class="dragArea">
             <template #item="{ element }">
               <div class="todo-item-wrapper" :id="element.id">
                 <TodoItem
                   :todo="element"
-                  v-for="todo in todosByStatus('completed')"
-                  :key="todo.id"
                   @editTodo="editTodo"
                   @deleteTodo="deleteTodo"
                   @toggleTodo="toggleTodoCompletion"
@@ -85,13 +102,14 @@
         </div>
       </div>
     </div>
-
   </div>
+  <div v-else>Loading...</div>
 </template>
 
 <script lang="ts">
+
 import { defineComponent, ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import draggable from 'vuedraggable';
 import TodoItem from './TodoItem.vue';
 import { useTodoStore } from '../stores/todoStore';
@@ -104,41 +122,56 @@ export default defineComponent({
   setup() {
     const todoStore = useTodoStore();
     const router = useRouter();
-    const newTodo = ref('');
     const todos = ref<Todo[]>([]);
-    const filter = ref<'all' | 'active' | 'completed'>('all');
-    const draggedItem = ref<Todo | null>(null);
+    const isLoading = ref(true);
 
-    onMounted(async () => {
-      if (todoStore.todos.length === 0) {
-        await todoStore.loadTodos();
-      }
-      todos.value = todoStore.todos;
+    const holdTodos = computed({
+      get: () => todos.value.filter(todo => todo.status === TodoStatus.Hold),
+      set: (value) => updateTodosList(value, TodoStatus.Hold)
     });
 
-    const todosByStatus = (status: TodoStatus) => {
-      return todos.value.filter((todo) => todo.status === status);
+    const inProgressTodos = computed({
+      get: () => todos.value.filter(todo => todo.status === TodoStatus.InProgress),
+      set: (value) => updateTodosList(value, TodoStatus.InProgress)
+    });
+
+    const testingTodos = computed({
+      get: () => todos.value.filter(todo => todo.status === TodoStatus.Testing),
+      set: (value) => updateTodosList(value, TodoStatus.Testing)
+    });
+
+    const completedTodos = computed({
+      get: () => todos.value.filter(todo => todo.status === TodoStatus.Completed),
+      set: (value) => updateTodosList(value, TodoStatus.Completed)
+    });
+
+    const updateTodosList = async (value: Todo[], status: TodoStatus) => {
+      const updatedTodos = [...todos.value];
+      value.forEach(todo => {
+        const index = updatedTodos.findIndex(t => t.id === todo.id);
+        if (index !== -1) {
+          updatedTodos[index] = { ...todo, status };
+          db.updateTodo({ ...updatedTodos[index] });
+        }
+      });
+      todos.value = updatedTodos;
     };
+
+    onMounted(async () => {
+      try {
+        if (todoStore.todos.length === 0) {
+          await todoStore.loadTodos();
+        }
+        todos.value = todoStore.todos;
+      } catch (error) {
+        console.error('Error loading todos:', error);
+      } finally {
+        isLoading.value = false;
+      }
+    });
 
     const editTodo = (id: number) => {
       router.push(`/edit/${id}`);
-    };
-
-    const addTodo = async () => {
-      if (newTodo.value.trim()) {
-        const newTodoItem: Todo = {
-          id: Date.now(),
-          title: newTodo.value,
-          completed: false,
-          text: '',
-          createDate: new Date(),
-          status: TodoStatus.Hold,
-        };
-        todos.value.push(newTodoItem);
-        newTodo.value = '';
-        const cleanTodo = JSON.parse(JSON.stringify(newTodoItem));
-        await db.addTodo(cleanTodo);
-      }
     };
 
     const deleteTodo = async (id: number) => {
@@ -146,80 +179,41 @@ export default defineComponent({
       await db.deleteTodo(id);
     };
 
-  const toggleTodoCompletion = async (id: number) => {
-
-    const todo = todos.value.find((todo) => todo.id === id);
-    if (todo) {
-      todo.completed = !todo.completed;
-      await db.updateTodo({...todo});
-    }
-
-  };
-
-
-    const filteredTodos = computed(() => {
-      if (filter.value === 'all') {
-        return todos.value;
+    const toggleTodoCompletion = async (id: number) => {
+      const todo = todos.value.find((todo) => todo.id === id);
+      if (todo) {
+        todo.completed = !todo.completed;
+        await db.updateTodo({...todo});
       }
-      return todos.value.filter((todo) =>
-        filter.value === 'completed' ? todo.completed : !todo.completed
-      );
-    });
-
-    const filterTodos = (newFilter: 'all' | 'active' | 'completed') => {
-      filter.value = newFilter;
     };
 
-    const onDragStart = (event) => {
-      draggedItem.value = event.item;
-      console.log('Drag started:', draggedItem.value);
-    };
+    const createNewTodo = async () => {
 
-    const onDrop = async (event) => {
-      const todo = draggedItem.value; // Используем сохранённую задачу
+      const newTodo: Todo = {
+        id: Date.now(),
+        title: '',
+        text: '',
+        status: TodoStatus.Hold,
+        completed: false,
+        createDate: new Date(),
+      };
 
-      if (!todo || !todo.id) {
-        console.error('Task does not have a valid ID:', todo);
-        return;
-      }
-
-      const newStatus = event.to.parentElement.id as TodoStatus;
-
-      // if (!todo.id) {
-      //   console.error('Task does not have a valid ID:', todo);
-      //   return;
-      // }
-      if (todo && todo.status !== newStatus) {
-        todo.status = newStatus;
-        const cleanTodo = {
-          id: todo.id,
-          title: todo.title,
-          text: todo.text,
-          status: todo.status,
-          createDate: todo.createDate,
-          completionDate: todo.completionDate,
-          completed: todo.completed,
-        };
-
-        await db.updateTodo(cleanTodo);
-        draggedItem.value = null;
-        console.log('Task dropped and updated:', cleanTodo);
-      }
+      await db.addTodo(newTodo);
+      todos.value.push(newTodo);
+      router.push(`/edit/${newTodo.id}`);
     };
 
     return {
-      newTodo,
       todos,
-      addTodo,
       editTodo,
       deleteTodo,
       toggleTodoCompletion,
-      filteredTodos,
-      filterTodos,
-      filter,
-      todosByStatus,
-      onDrop,
-      onDragStart
+      createNewTodo,
+      isLoading,
+      holdTodos,
+      inProgressTodos,
+      testingTodos,
+      completedTodos,
     };
   },
 });
@@ -248,20 +242,30 @@ export default defineComponent({
   min-height: 400px;
 }
 
-h3 {
-  margin-bottom: 20px;
+.dragArea {
+  min-height: 50px;
 }
 
-.todo-item {
-  margin-bottom: 10px;
+h3 {
+  margin-bottom: 20px;
 }
 
 .todo-item-wrapper {
   user-select: none;
   cursor: grab;
+  margin-bottom: 8px;
 }
 
 .todo-item-wrapper:active {
   cursor: grabbing;
+}
+
+.create-todo-btn {
+  transition: all 0.2s ease;
+}
+
+.create-todo-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>

@@ -30,6 +30,8 @@
       </div>
 
       <button @click="saveTodo" class="btn btn-primary">Save</button>
+      <div class="d-inline-block mx-2"></div>
+      <button @click="cancel" class="btn btn-secondary">Cancel</button>
     </div>
   </div>
 </template>
@@ -90,7 +92,9 @@ export default defineComponent({
       if (todo.value?.status === 'completed') {
         todo.value.completed = true;
       } else {
-        todo.value.completed = false;
+        if (todo.value) {
+          todo.value.completed = false;
+        }
       }
     };
 
@@ -101,11 +105,17 @@ export default defineComponent({
       }
     };
 
+    const cancel = () => {
+      router.push('/');
+    };
+
     return {
       todo,
       formattedCreateDate,
       formattedCompletionDate,
-      saveTodo
+      saveTodo,
+      cancel,
+      handleStatusChange
     };
   }
 });
